@@ -24,7 +24,7 @@ export class AppComponent implements OnInit {
     @Inject(NgxGrowthbookService) public growthbook: NgxGrowthbookService
   ) {
     // Initialize the observable
-     this.featureA$ = this.growthbook.evaluateFeature<string>('test-flag', 'default');
+     this.featureA$ = this.growthbook.evaluateFeature<string>('test-flag');
     //  // Initialize sync property
      this.featureC = this.growthbook.evaluateFeatureSync<boolean>('test-flag', false);
   }

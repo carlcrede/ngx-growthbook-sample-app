@@ -206,8 +206,10 @@
       <h1>Hello, {{ title }}</h1>
       <p>Congratulations! Your app is running. 🎉</p>
       <!-- Using async pipe with observable -->
-      @if (growthbook.isOn('test-flag')) {
+      @if (growthbook.getFeature('test-flag').on) {
       <div>
+        growthbook.isOn
+        <br>
         Feature A is enabled with value: {{ growthbook.getFeatureValue('test-flag', null) }}
       </div>
       }
@@ -215,7 +217,7 @@
       @if (featureA$ | async; as featureA) {
       @if (featureA.on) {
       <div>
-        Feature A is enabled with value: {{ featureA.value }}
+        FeatureA$ is enabled with value: {{ featureA.value }}
       </div>
       }
       }
