@@ -1,59 +1,107 @@
-# NgxSampleApp
+# NGX Growthbook Integration
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.7.
+This project demonstrates the integration of Growthbook with Angular using the `ngx-growthbook` library for feature flags and A/B testing.
 
-## Development server
+## Setup
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+1. Install the package and growthbook:
 
 ```bash
-ng generate component component-name
+npm install ngx-growthbook @growthbook/growthbook
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+2. Configure Growthbook in your `app.config.ts`:
 
-```bash
-ng generate --help
+```typescript
+import { provideNgxGrowthbook } from "ngx-growthbook";
+import { MyEventTrackingService } from "./events.service";
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNgxGrowthbook({
+      subscribeToChanges: true, // Auto-update features in real-time
+      backgroundSync: true, // Sync features in background
+      apiHost: "YOUR_API_HOST", // e.g. 'https://cdn.growthbook.io'
+      clientKey: "YOUR_CLIENT_KEY",
+      enableDevMode: true, // Enable console logging (disable in production)
+      trackingService: MyEventTrackingService, // Your analytics service (optional)
+    }),
+  ],
+};
 ```
 
-## Building
+## Usage
 
-To build the project run:
+### 1. Observable Approach
 
-```bash
-ng build
+```typescript
+export class YourComponent implements OnInit {
+  feature$: Observable<FeatureResult<string>>;
+
+  constructor(private growthbook: NgxGrowthbookService) {
+    this.feature$ = this.growthbook.evaluateFeature<string>('feature-key', 'default-value');
+  }
+}
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### 2. Sync Evaluation
 
-## Running unit tests
+```typescript
+export class YourComponent {
+  feature: FeatureResult<boolean>;
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+  constructor(private growthbook: NgxGrowthbookService) {
+    this.feature = this.growthbook.evaluateFeatureSync<boolean>('feature-key', false);
+  }
+}
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
+### 3. Template Usage
+```html
+@if (getFeature('feature-key', false).on) {
+  <div>
+    Feature is enabled!
+  </div>
+}
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### 4. Setting User Attributes
+```typescript
+this.growthbook.setAttributes({
+  id: 'user-123',
+  url: window.location.href,
+  // ... other attributes
+});
+```
 
-## Additional Resources
+## Tracking Service
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Create a tracking service that implements the `TrackingService` interface to handle experiment tracking:
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class EventsService implements TrackingService {
+  track(experiment: Experiment, result: ExperimentResult): void {
+    // Implement your analytics tracking
+    analytics.track('Experiment Viewed', {
+      experimentId: experiment.key,
+      variationId: result.variationId
+    });
+  }
+}
+```
+
+## Features
+
+- Real-time feature updates with `subscribeToChanges`
+- Background synchronization with `backgroundSync`
+- TypeScript support for feature values
+- Integration with analytics through `TrackingService`
+- Dev mode for easier debugging
+
+## Best Practices
+
+1. Always provide default values when evaluating features
+2. Implement proper error handling
+3. Disable `enableDevMode` in production
+4. Use TypeScript types for feature values
+5. Keep track of feature dependencies in components
